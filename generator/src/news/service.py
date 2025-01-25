@@ -30,7 +30,7 @@ You should follow these instructions:
 6. The content should be 100 words long.
 """
             prompt = self.llm.generate_prompt(news_summarizer,
-                                              f"Title: {news["title"]} / News: {news["maintext"]} / Date: {news["date_publish"]}")
+                                              f"Title: {news['title']} / News: {news['maintext']} / Date: {news['date_publish']}")
             result = self.llm.send_request(prompt)
             result = result.replace("```json", "").replace("```", "")
             result = json.loads(result)
