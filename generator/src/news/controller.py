@@ -14,7 +14,7 @@ class NewsController(MethodView):
         level = request.args.get("level", default=None, type=str)
         keywords = request.args.get(
             "keywords", default=None, type=str)
-        
+
         if lang == None or country == None or level == None or keywords == None:
             abort(400, description="Arguments are not fully provided")
 
