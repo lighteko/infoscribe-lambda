@@ -7,6 +7,6 @@ spec:
   selector:
     app: infoscribe-flask
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 5000
+    - protocol: TCP
+      port: 80
+      targetPort: 5000

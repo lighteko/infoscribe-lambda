@@ -13,7 +13,7 @@ spec:
         app: infoscribe-flask
     spec:
       containers:
-      - name: infoscribe-flask
-        image: docker push 686255989119.dkr.ecr.us-east-2.amazonaws.com/infoscribe-flask:latest
-        ports:
-        - containerPort: 5000
+        - name: infoscribe-flask
+          image: docker push 686255989119.dkr.ecr.us-east-2.amazonaws.com/infoscribe-flask:latest
+          ports:
+            - containerPort: 5000
