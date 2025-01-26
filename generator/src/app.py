@@ -9,7 +9,6 @@ import json
 from config import BaseConfig
 
 
-
 def create_app():
     app = Flask(__name__)
 
@@ -42,7 +41,8 @@ def create_app():
         response_info = {
             'Status Code': response.status_code,
             'Headers': dict(response.headers),
-            'Data': response.data.decode('utf-8')  # Assuming the response data is in UTF-8
+            # Assuming the response data is in UTF-8
+            'Data': response.data.decode('utf-8')
         }
 
         # Decode the JSON data in the "Data" field
@@ -58,6 +58,7 @@ def create_app():
         return response
 
     return app
+
 
 def register_blueprints(app: Flask) -> None:
     from src.news.routes import news_api
