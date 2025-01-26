@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infoscribe-flask
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infoscribe-flask
+  template:
+    metadata:
+      labels:
+        app: infoscribe-flask
+    spec:
+      containers:
+      - name: infoscribe-flask
+        image: docker push 686255989119.dkr.ecr.us-east-2.amazonaws.com/infoscribe-flask:latest
+        ports:
+        - containerPort: 5000
