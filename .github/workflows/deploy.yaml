@@ -39,6 +39,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: 22
           script: |
-            cd /home/ubuntu/infoscribe
+            cd infoscribe
             docker-compose -f docker-compose.yaml up -d builder
 
