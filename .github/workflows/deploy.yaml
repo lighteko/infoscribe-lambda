@@ -40,4 +40,6 @@ jobs:
           instance-ids: ${{ secrets.INSTANCE_ID }}
 
           working-directory: /home/ubuntu/infoscribe
+          command: docker-compose stop builder
+          command: docker-compose rm builder
           command: docker-compose -f docker-compose.yaml up -d builder
