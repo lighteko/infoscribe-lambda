@@ -28,7 +28,7 @@ jobs:
       # Build and push Docker image
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/infoscribe-flask:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/infoscribe-flask:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/infoscribe-flask:latest
 
       # SSH into EC2 and deploy
