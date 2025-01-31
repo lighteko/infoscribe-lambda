@@ -15,11 +15,11 @@ class GNews:
     def init_app(cls, app: Flask):
         cls.API_KEY = app.config["GNEWS_API_KEY"]
 
-    def get_news(self, lang, country, topic: str):
+    def get_news(self, topic: str):
         if GNews.API_KEY is "": 
             logging.error("G News API KEY not initialized")
         response = requests.get(
-            f"https://gnews.io/api/v4/search?q={topic}&lang={lang}&country={country}&max=10&apikey={GNews.API_KEY}")
+            f"https://gnews.io/api/v4/search?q={topic}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
         news_list = []
         res = response.json()
         news_link_list = [article["url"]
