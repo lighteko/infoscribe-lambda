@@ -15,7 +15,7 @@ class GNews:
         cls.API_KEY = app.config["GNEWS_API_KEY"]
 
     def get_news(self, topic: str):
-        if GNews.API_KEY is "":
+        if GNews.API_KEY == "":
             logging.error("G News API KEY not initialized")
         response = requests.get(
             f"https://gnews.io/api/v4/search?q={topic}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
