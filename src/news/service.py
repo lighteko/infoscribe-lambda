@@ -10,10 +10,10 @@ class NewsService:
         self.llm = LLM()
         self.gnews = GNews()
 
-    def make_newsletter(self, lang: str, country: str, keywords: List[str], level: str):
+    def make_newsletter(self, lang: str, keywords: List[str], level: str):
         news_list = []
         for keyword in keywords:
-            news = self.gnews.get_news(lang, country, keyword)
+            news = self.gnews.get_news(keyword)
             news_list.extend(news)
         contents = []
         for news in news_list:

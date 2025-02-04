@@ -1,6 +1,4 @@
-import os
 from flask import Flask
-from langchain.callbacks import get_openai_callback
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 
