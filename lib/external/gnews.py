@@ -1,3 +1,4 @@
+from typing import List
 from src.app import App
 from newsplease import NewsPlease
 import requests
@@ -14,7 +15,7 @@ class GNews:
     def init_app(cls, app: App):
         cls.API_KEY = app.config["GNEWS_API_KEY"]
 
-    def get_news(self, topic: str):
+    def get_news(self, topic: str) -> List[dict]:
         if GNews.API_KEY == "":
             logging.error("G News API KEY not initialized")
         response = requests.get(
