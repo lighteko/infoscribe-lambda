@@ -47,10 +47,13 @@ class OpenAI:
             existing_embedding = self.embeddings.embed_query(existing_doc)
             similarity_score = self._calculate_cosine_similarity(
                 query_embedding, existing_embedding)
-
-            return similarity_score >= threshold
-
+            if similarity_score >= threshold:
+                self.update_vector_db(vector_db, content)
+                return True
         return False
+
+    def load_vector_db(self, path) -> FAISS:
+        return FAISS.load_local(path)
 
     def create_vector_db(self) -> FAISS:
         return FAISS.from_documents([], self.embeddings)
