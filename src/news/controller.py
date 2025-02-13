@@ -27,9 +27,9 @@ class Controller:
                 return make_output(data={}, error=400, status="missing required fields")
 
             if event_type == "collect":
-                self.service.daily_summarize(locale, categories)
+                self.service.daily_summarize(provider_id, locale, categories)
             elif event_type == "build":
-                self.service.make_newsletter(locale, categories)
+                self.service.make_newsletter(provider_id, locale, categories)
             else:
                 return make_output(data={}, error=400, status="invalid event type")
 
