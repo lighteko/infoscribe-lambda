@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+  </head>
+  <body style="margin: 0; padding: 0; min-width: 100%; background-color: #f4f4f4">
+    <center style="width: 100%; table-layout: fixed; background-color: #f4f4f4; padding-bottom: 40px;">
+      <div style="max-width: 600px; background-color: #ffffff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        
+        <!-- Header -->
+        <table align="center" style="background-color: #3498db; width: 100%; max-width: 600px;">
+          <tr>
+            <td style="padding: 20px 0; text-align: center">
+              <img src="{{ logo_url }}" alt="Your Logo" style="max-width: 200px; height: auto" />
+            </td>
+          </tr>
+        </table>
+
+        <!-- Hero Section -->
+        <table align="center" style="background-color: #2980b9; width: 100%; max-width: 600px;">
+          <tr>
+            <td style="padding: 40px 20px; text-align: center">
+              <h1 style="font-size: 28px; margin: 0 0 20px 0; font-weight: bold">{{ hero_title }}</h1>
+              <p style="font-size: 16px; line-height: 1.5; margin: 0 0 20px 0">{{ hero_text }}</p>
+              <a href="{{ hero_button_url }}" style="background-color: #e74c3c; color: #ffffff; padding: 12px 24px; border-radius: 5px; font-weight: bold;">{{ hero_button_text }}</a>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Dynamic News Cards -->
+        {% for article in articles %}
+        <table align="center" style="background-color: #ffffff; width: 100%; max-width: 600px; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 20px">
+              {% if article.image_url %}
+                <img src="{{ article.image_url }}" alt="News Image" style="width: 100%; height: auto; border-radius: 5px; margin-bottom: 10px;" />
+              {% endif %}
+              <h2 style="font-size: 24px; margin: 0 0 10px 0; color: #2c3e50">{{ article.title }}</h2>
+              <p style="font-size: 16px; line-height: 1.6; margin: 0 0 10px 0">{{ article.content }}</p>
+              <p style="font-size: 12px; line-height: 1.6; margin: 0 0 10px 0; color: #777777;">Published on: {{ article.date }}</p>
+              <a href="{{ article.url }}" style="background-color: #3498db; color: #ffffff; padding: 10px 20px; border-radius: 5px; font-weight: bold;">Read More</a>
+            </td>
+          </tr>
+        </table>
+        {% endfor %}
+
+        <!-- Footer -->
+        <table align="center" style="background-color: #ffffff; width: 100%; max-width: 600px; border-top: 1px solid #e5e5e5;">
+          <tr>
+            <td style="padding: 30px 20px; text-align: center; font-size: 14px">
+              <p>You received this email because you signed up for our newsletter.</p>
+              <p>
+                <a href="{{ unsubscribe_url }}" style="color: #3498db; text-decoration: underline">Unsubscribe</a> |
+                <a href="{{ preferences_url }}" style="color: #3498db; text-decoration: underline">Update Preferences</a>
+              </p>
+              <p style="font-size: 12px; color: #999999">© 2025 {{ company_name }}. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </center>
+  </body>
+</html>
