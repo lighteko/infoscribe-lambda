@@ -1,7 +1,9 @@
+import json
 import tempfile
 import boto3
 import os
 import logging
+from io import BytesIO
 
 from src.app import App
 
@@ -27,12 +29,31 @@ class S3:
         cls.AWS_REGION = app.config['AWS_REGION']
         cls.AWS_BUCKET_NAME = app.config['AWS_BUCKET_NAME']
 
+    def deserialize_json(json_obj)->BytesIO:
+        file_content = json.dumps(json_obj).encode("utf-8")
+        deserialized = BytesIO(file_content)
+        return deserialized
+
+    def serialize_json_files(self, file_keys, bucket=None)->list:
+        if bucket is None:
+            bucket = self.bucket
+        try:
+            res = []
+            for file_key in file_keys:
+                file_obj = BytesIO()
+                self.client.download_fileobj(bucket, file_key, file_obj)
+                file_obj.seek(0)
+                json_data = json.load(file_obj)
+                res.append(json_data)
+            return res
+        except Exception as e:
+            return None
+
     def get_files_from_dir(self, dir_name, bucket=None):
         if bucket is None:
             bucket = self.bucket
         try:
-            response = self.client.list_objects_v2(
-                Bucket=bucket, Prefix=dir_name)
+            response = self.client.list_objects_v2(Bucket=bucket, Prefix=dir_name)
             if 'Contents' in response:
                 return [obj['Key'] for obj in response['Contents']]
             return []
@@ -75,15 +96,15 @@ class S3:
                 f"❌ Failed uploading the file to S3 ({file_local_path} → {bucket}/{file_s3_path}): {e}")
             return None
 
-    def upload_file_object(self, file_obj: File, file_s3_path, bucket=None):
+    def upload_file_object(self, file_obj: BytesIO, file_s3_path, bucket=None):
         if bucket is None:
             bucket = self.bucket
         try:
             if file_s3_path is None:
                 file_s3_path = file_obj.filename
 
-            with open(file_obj.filename, "rb") as f:
-                self.client.upload_fileobj(f, bucket, file_s3_path)
+            file_obj.seek(0)
+            self.client.upload_fileobj(file_obj, bucket, file_s3_path)
 
             object_url = f"https://{bucket}.s3.amazonaws.com/{file_s3_path}"
             logging.info(

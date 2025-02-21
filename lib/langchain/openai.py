@@ -6,6 +6,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.docstore.document import Document
 import numpy as np
+from io import BytesIO
 
 from src.app import App
 
@@ -25,7 +26,14 @@ class OpenAI:
     def send_request(self, messages):
         res = self.llm.invoke(messages)
         return res.content
-
+    
+    def parse_json_result(self, response) -> dict:
+        try:
+            result = json.loads(response.strip("```json").strip("```"))
+        except json.JSONDecodeError:
+            raise ValueError("The response of OpenAI API was not properly formatted in JSON.")
+        return result
+    
     def generate_prompt(self, preset: str, data: dict):
         messages = ChatPromptTemplate.from_messages([
             ("system", preset),

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import List
 from src.app import App
 from newsplease import NewsPlease
@@ -15,11 +16,11 @@ class GNews:
     def init_app(cls, app: App):
         cls.API_KEY = app.config["GNEWS_API_KEY"]
 
-    def get_news(self, topic: str) -> List[dict]:
+    def get_news(self, topic: str, from_date: datetime) -> List[dict]:
         if GNews.API_KEY == "":
             logging.error("G News API KEY not initialized")
         response = requests.get(
-            f"https://gnews.io/api/v4/search?q={topic}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
+            f"https://gnews.io/api/v4/search?q={topic}&from={from_date}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
         news_list = []
         res = response.json()
         news_link_list = [article["url"]
