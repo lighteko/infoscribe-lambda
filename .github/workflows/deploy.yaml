@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true 
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -41,6 +41,6 @@ jobs:
 
           working-directory: /home/ubuntu/infoscribe
           command: |
-                  docker-compose stop builder
-                  docker-compose rm -f builder
-                  docker-compose -f docker-compose.yaml up -d builder
+            docker-compose stop builder
+            docker-compose rm -f builder
+            docker-compose -f docker-compose.yaml up -d builder

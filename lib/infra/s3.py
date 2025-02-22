@@ -29,12 +29,12 @@ class S3:
         cls.AWS_REGION = app.config['AWS_REGION']
         cls.AWS_BUCKET_NAME = app.config['AWS_BUCKET_NAME']
 
-    def deserialize_json(json_obj)->BytesIO:
+    def deserialize_json(json_obj) -> BytesIO:
         file_content = json.dumps(json_obj).encode("utf-8")
         deserialized = BytesIO(file_content)
         return deserialized
 
-    def serialize_json_files(self, file_keys, bucket=None)->list:
+    def serialize_json_files(self, file_keys, bucket=None) -> list:
         if bucket is None:
             bucket = self.bucket
         try:
@@ -53,7 +53,8 @@ class S3:
         if bucket is None:
             bucket = self.bucket
         try:
-            response = self.client.list_objects_v2(Bucket=bucket, Prefix=dir_name)
+            response = self.client.list_objects_v2(
+                Bucket=bucket, Prefix=dir_name)
             if 'Contents' in response:
                 return [obj['Key'] for obj in response['Contents']]
             return []

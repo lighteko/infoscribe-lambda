@@ -3,6 +3,7 @@ from lib.external.gnews import GNews
 from lib.langchain.openai import OpenAI
 from config import BaseConfig
 
+
 class Config(dict):
     @classmethod
     def from_object(self, obj: object):
@@ -12,9 +13,11 @@ class Config(dict):
         for key in keys:
             self[key] = members[key]
 
+
 class App:
     def __init__(self):
         self.config = Config()
+
 
 def create_app():
     app = App()
