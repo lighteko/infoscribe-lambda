@@ -1,4 +1,4 @@
-name: Deploy Flask App to EC2
+name: Deploy Builder App to AWS Lambda
 
 on:
   pull_request:

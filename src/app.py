@@ -1,3 +1,4 @@
+from lib.external.express import Express
 from lib.external.gnews import GNews
 from lib.langchain.openai import OpenAI
 from config import BaseConfig
@@ -21,5 +22,6 @@ def create_app():
     BaseConfig(app)
     OpenAI.init_app(app)
     GNews.init_app(app)
+    Express.init_app(app)
 
     return app
