@@ -15,5 +15,7 @@ class Express:
 
     def dispatch_newsletter(self, provider_id, dispatch_date):
         requests.post(
-            f"{self.API_END_POINT}?provider_id={provider_id}&dispatch_date={dispatch_date}")
-        
+            f"{self.API_END_POINT}/dispatch", {
+                "providerId": provider_id,
+                "dispatchDate": dispatch_date
+            })
