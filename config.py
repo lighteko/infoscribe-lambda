@@ -1,8 +1,7 @@
 import os
 from os.path import join, dirname
-
 from dotenv import load_dotenv
-from flask import Flask
+from src.app import App
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -22,10 +21,9 @@ class BaseConfig(object):
     # GNEWS
     GNEWS_API_KEY = os.environ.get("GNEWS_API_KEY", '')
 
-    def __init__(self, app: Flask):
-
+    def __init__(self, app: App):
         self.init_app(app)
 
     @classmethod
-    def init_app(cls, app: Flask):
+    def init_app(cls, app: App):
         app.config.from_object(cls)

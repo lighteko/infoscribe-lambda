@@ -1,6 +1,6 @@
-from flask import Flask
 import requests
 import logging
+from src.app import App
 
 
 class Express:
@@ -10,8 +10,12 @@ class Express:
         pass
 
     @classmethod
-    def init_app(cls, app: Flask):
+    def init_app(cls, app: App):
         cls.API_END_POINT = app.config["EXPRESS_END_POINT"]
 
-    def send_newsletter(self, newsletter: dict):
-        pass
+    def dispatch_newsletter(self, provider_id, dispatch_date):
+        requests.post(
+            f"{self.API_END_POINT}/dispatch", {
+                "providerId": provider_id,
+                "dispatchDate": dispatch_date
+            })

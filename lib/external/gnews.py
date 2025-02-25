@@ -1,4 +1,6 @@
-from flask import Flask
+from datetime import datetime, timedelta
+from typing import List
+from src.app import App
 from newsplease import NewsPlease
 import requests
 import logging
@@ -11,14 +13,14 @@ class GNews:
         pass
 
     @classmethod
-    def init_app(cls, app: Flask):
+    def init_app(cls, app: App):
         cls.API_KEY = app.config["GNEWS_API_KEY"]
 
-    def get_news(self, topic: str):
+    def get_news(self, topic: str, from_date: datetime) -> List[dict]:
         if GNews.API_KEY == "":
             logging.error("G News API KEY not initialized")
         response = requests.get(
-            f"https://gnews.io/api/v4/search?q={topic}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
+            f"https://gnews.io/api/v4/search?q={topic}&from={from_date}&lang=en&country=us&max=10&apikey={GNews.API_KEY}")
         news_list = []
         res = response.json()
         news_link_list = [article["url"]
