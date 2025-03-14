@@ -19,28 +19,36 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/infoscribe-flask:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/infoscribe-flask:latest
-
-      - name: Deploy to EC2
-        uses: peterkimzz/aws-ssm-send-command@v1.1.1
-        id: ssm
-        with:
-          aws-region: ${{ secrets.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          instance-ids: ${{ secrets.INSTANCE_ID }}
-
-          working-directory: /home/ubuntu/infoscribe
-          command: |
-            docker-compose stop builder
-            docker-compose rm -f builder
-            docker-compose -f docker-compose.yaml up -d builder
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Build Docker image
+        run: docker build -t infoscribe-lambda:latest .
+      
+      - name: Create deployment package
+        run: |
+          docker create --name temp_container infoscribe-lambda:latest
+          mkdir -p lambda_package
+          docker cp temp_container:/app/. lambda_package/
+          docker rm temp_container
+          cd lambda_package
+          zip -r ../deployment.zip .
+      
+      - name: Upload to S3
+        run: |
+          aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/deployments/infoscribe-lambda-${{ github.sha }}.zip
+          
+      - name: Update Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+            --s3-bucket ${{ secrets.S3_BUCKET }} \
+            --s3-key deployments/infoscribe-lambda-${{ github.sha }}.zip
+            
+      - name: Clean up
+        run: |
+          rm -rf lambda_package deployment.zip
