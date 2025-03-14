@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import json
 from collections import defaultdict
 from functools import lru_cache
+from io import BytesIO
 
 
 class NewsService:
@@ -24,12 +25,16 @@ class NewsService:
 
         vector_db_path = self._get_vector_db_path(provider_id)
 
-        db = self.openAI.load_vector_db(vector_db_path) \
-            if vector_db_path \
-            else self.openAI.create_vector_db()
+        db = self.openAI.load_vector_db(
+            vector_db_path) if vector_db_path else None
+
+        if db is None:
+            db = self.openAI.create_vector_db()
 
         unique_news_list = [
-            news for news in news_list if not self.openAI.is_duplicate(db, news["maintext"])]
+            news for news in news_list if not self.openAI.is_duplicate(db, news["maintext"])
+        ]
+
         unique_news_list.sort(key=lambda news: datetime.strptime(
             news["date_publish"], "%Y-%m-%dT%H:%M:%S"))
 
@@ -138,9 +143,12 @@ class NewsService:
 
         html = self._create_html_doc(newsletter)
         dispatch_date = datetime.today()
-        self.s3.upload_file_object(html.encode(
-            "utf-8"), f"{provider_id}/newsletter/{dispatch_date}.html")
-        self.express.dispatch_newsletter(provider_id, dispatch_date)
+        html_bytes = html.encode("utf-8")
+        file_obj = BytesIO(html_bytes)
+        self.s3.upload_file_object(
+            file_obj, f"{provider_id}/newsletter/{dispatch_date}.html")
+        self.express.dispatch_newsletter(
+            provider_id, dispatch_date.strftime("%Y-%m-%d"))
 
     def _create_html_doc(self, newsletter: dict) -> str:
         template = self.env.get_template("template.html")
