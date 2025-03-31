@@ -37,7 +37,7 @@ class App:
                 raise ValueError("Event type is required in detail")
 
             # Process the event using the news controller
-            response = self.news_controller.get(detail)
+            response = self.news_controller.get(event)
 
             return {
                 'status_code': response.get('error', 200),

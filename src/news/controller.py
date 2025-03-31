@@ -1,6 +1,5 @@
 import json
 from src.news.service import NewsService
-from src.make_output import make_output
 
 
 class Controller:
@@ -12,12 +11,9 @@ class Controller:
             if "detail" in event:
                 message = event["detail"]
             else:
-                return make_output(data={}, error=400, status="invalid event structure")
+                raise Exception("Missing detail in event")
 
             event_type = message.get("eventType")
-
-            if not event_type:
-                return make_output(data={}, error=400, status="missing event type")
 
             provider_id = message.get("providerId")
             locale = message.get("locale")
@@ -25,7 +21,7 @@ class Controller:
             dispatch_day = message.get("dispatchDay")
 
             if not provider_id or not locale or not categories:
-                return make_output(data={}, error=400, status="missing required fields")
+                raise Exception("Missing required fields: providerId, locale, or categories")
 
             if event_type == "collect":
                 self.service.daily_summarize(
@@ -33,11 +29,11 @@ class Controller:
             elif event_type == "build":
                 self.service.make_newsletter(provider_id, locale, categories)
             else:
-                return make_output(data={}, error=400, status="invalid event type")
+                raise Exception(f"Unsupported event type: {event_type}")
 
         except json.JSONDecodeError:
-            return make_output(data={}, error=400, status="invalid JSON format")
-        except KeyError:
-            return make_output(data={}, error=400, status="missing necessary fields")
+            raise Exception("Invalid JSON format in event")
+        except KeyError as e:
+            raise Exception(f"Missing key in event: {str(e)}")
         except Exception as e:
-            return make_output(data={}, error=500, status="internal server error", message=str(e))
+            raise Exception(f"Error processing event: {str(e)}")
