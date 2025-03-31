@@ -19,9 +19,9 @@ class NewsService:
         self.env = Environment(loader=FileSystemLoader("templates"))
         self.express = Express()
 
-    def _fetch_news(self, provider_id: str, categories: List[str], from_date: datetime) -> List[dict]:
-        news_list = [news for category in categories for news in self.gnews.get_news(
-            category, from_date) if news.get("maintext")]
+    def _fetch_news(self, provider_id: str, tags: List[str], from_date: datetime) -> List[dict]:
+        news_list = [news for tag in tags for news in self.gnews.get_news(
+            tag, from_date) if news.get("maintext")]
 
         vector_db_path = self._get_vector_db_path(provider_id)
 
@@ -44,7 +44,7 @@ class NewsService:
     def _get_vector_db_path(self, provider_id: str):
         return self.s3.get_file(path=f"{provider_id}/collection/vectordb/index")
 
-    def daily_summarize(self, provider_id: str, locale: str, categories: List[str], dispatch_day: int):
+    def daily_summarize(self, provider_id: str, locale: str, tags: List[str], dispatch_day: int):
         today = datetime.now()
         diff = dispatch_day - today.weekday()
         dispatch_date = today + timedelta(days=diff, weeks=-1)
@@ -53,7 +53,7 @@ class NewsService:
             if today - dispatch_date > timedelta(days=2) \
             else dispatch_date
 
-        unique_news_list = self._fetch_news(provider_id, categories, from_date)
+        unique_news_list = self._fetch_news(provider_id, tags, from_date)
 
         groups = defaultdict(list)
         for news in unique_news_list:
@@ -96,7 +96,7 @@ class NewsService:
             self.s3.upload_file_object(
                 file_obj, f"{provider_id}/collection/{date}.json")
 
-    def make_newsletter(self, provider_id: str, locale: str, categories: List[str]):
+    def make_newsletter(self, provider_id: str, locale: str, tags: List[str]):
         intro_and_outro = f"""
         You are a creative newsletter writer. Write an engaging intro and outro for the newsletter.
         ### **Instructions**:
@@ -104,6 +104,7 @@ class NewsService:
         - **Tone:** Friendly, engaging, and professional.
         - **Intro (~100 words):** Hook readers, set the context, preview the content.
         - **Outro (~100 words):** Wrap up smoothly, encourage readers to stay tuned.
+        - **Keywords:** This newsletter is about {tags}.
         - **Formatting:** Use:
           - `<h2>` for section titles
           - `<p>` for paragraphs

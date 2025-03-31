@@ -1,9 +1,12 @@
+from src.news.collector import NewsCollector
+from src.news.builder import NewsletterBuilder
 from lib.external.express import Express
 from lib.external.gnews import GNews
 from lib.langchain.openai import OpenAI
 from config import BaseConfig
-from src.news.controller import Controller
-from typing import Any
+from typing import Any, Dict
+import logging
+from src.models.events import LambdaEvent
 
 
 class Config(dict):
@@ -11,7 +14,7 @@ class Config(dict):
     def from_object(cls, obj: Any) -> 'Config':
         if not hasattr(obj, '__dict__'):
             raise ValueError("Object must have __dict__ attribute")
-        
+
         config = cls()
         for key, value in obj.__dict__.items():
             config[key] = value
@@ -21,36 +24,45 @@ class Config(dict):
 class App:
     def __init__(self):
         self.config = Config()
-        self.news_controller = Controller()
+        self.collector = NewsCollector()
+        self.builder = NewsletterBuilder()
 
-    def handle(self, event):
+    def handle(self, event: Dict[str, Any], context: Any):
         """
-        Handle AWS EventBridge events
-        """
+    Process EventBridge events for news collection and newsletter building
+
+    Args:
+        event: The event dict from AWS Lambda
+        context: The context object from AWS Lambda
+    """
         try:
-            detail = event.get('detail', {})
-            source = event.get('source')
+            # Parse and validate the event
+            parsed_event = LambdaEvent.model_validate(event)
+            detail = parsed_event.detail
 
-            # Extract event type from detail 
-            event_type = detail.get('eventType')
-            if not event_type:
-                raise ValueError("Event type is required in detail")
+            # Process based on event type
+            if detail.eventType == "collect":
+                self.collector.collect(
+                    detail.providerId,
+                    detail.locale,
+                    detail.categories,
+                    detail.dispatchDay or 0
+                )
 
-            # Process the event using the news controller
-            response = self.news_controller.get(event)
+            elif detail.eventType == "build":
+                self.builder.build(
+                    detail.providerId,
+                    detail.locale,
+                    detail.categories
+                )
 
-            return {
-                'status_code': response.get('error', 200),
-                'source': source,
-                'result': response
-            }
+            else:
+                logging.warning(f"Unsupported event type: {detail.eventType}")
 
         except Exception as e:
-            return {
-                'status_code': 500,
-                'error': str(e),
-                'source': event.get('source')
-            }
+            logging.exception(f"Error processing event: {str(e)}")
+            # Reraise to mark Lambda execution as failed
+            raise
 
 
 def create_app():
