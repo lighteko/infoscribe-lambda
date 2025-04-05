@@ -5,11 +5,10 @@ on:
     branches:
       - main
     types:
-      - closed  # PR이 머지되었을 때만 트리거됨
+      - closed  
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:

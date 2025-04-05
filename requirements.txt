@@ -20,7 +20,7 @@ tiktoken
 numpy
 
 # News processing
-newsplease
+news-please
 
 # Template rendering
 jinja2
