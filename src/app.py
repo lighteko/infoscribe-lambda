@@ -45,7 +45,7 @@ class App:
                 self.collector.collect(
                     detail.providerId,
                     detail.locale,
-                    detail.categories,
+                    detail.tags,
                     detail.dispatchDay or 0
                 )
 
@@ -53,7 +53,7 @@ class App:
                 self.builder.build(
                     detail.providerId,
                     detail.locale,
-                    detail.categories
+                    detail.tags
                 )
 
             else:
