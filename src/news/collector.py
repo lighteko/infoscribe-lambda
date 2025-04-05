@@ -9,22 +9,22 @@ class NewsCollector:
     def __init__(self):
         self.service = NewsService()
 
-    def collect(self, provider_id: str, locale: str, categories: List[str], dispatch_day: int = 0) -> None:
+    def collect(self, provider_id: str, locale: str, tags: List[str], dispatch_day: int = 0) -> None:
         """
         Collect and summarize daily news for a provider
 
         Args:
             provider_id: The provider identifier
             locale: The locale for news articles
-            categories: List of news categories to collect
+            tags: List of news keywords to collect
             dispatch_day: Day offset for dispatch
         """
         logging.info(
-            f"Collecting news for provider: {provider_id}, categories: {categories}")
+            f"Collecting news for provider: {provider_id}, tags: {tags}")
 
         try:
             self.service.daily_summarize(
-                provider_id, locale, categories, dispatch_day)
+                provider_id, locale, tags, dispatch_day)
             logging.info(
                 f"Successfully collected news for provider {provider_id}")
         except Exception as e:
