@@ -1,11 +1,11 @@
-name: Deploy Builder App to AWS Lambda
+name: Deploy Pipeline to AWS Lambda (via ECR)
 
 on:
   pull_request:
     branches:
       - main
     types:
-      - closed  
+      - closed
 
 jobs:
   deploy:
@@ -15,10 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -27,24 +28,29 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install dependencies and prepare deployment package
+      - name: Set variables
+        id: vars
         run: |
-          mkdir -p lambda_package
-          pip install --no-cache-dir -r requirements.txt -t lambda_package/
-          cp -r *.py lambda_package/
+          echo "ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com" >> $GITHUB_ENV
+          echo "IMAGE_NAME=infoscribe-lambda" >> $GITHUB_ENV
+          echo "IMAGE_URI=${ECR_REGISTRY}/${IMAGE_NAME}:latest" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=${IMAGE_NAME}-${{ github.sha }}.tar.gz" >> $GITHUB_ENV
 
-      - name: Zip deployment package
+      - name: Build and push Docker image to ECR (latest only)
         run: |
-          cd lambda_package
-          zip -r ../deployment.zip .
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
 
-      - name: Upload to S3
+      - name: Save Docker image as tar.gz (with commit hash)
         run: |
-          aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/deployments/infoscribe-lambda-${{ github.sha }}.zip
+          docker save $IMAGE_URI | gzip > $ARCHIVE_NAME
 
-      - name: Update Lambda function
+      - name: Upload Docker image to S3
+        run: |
+          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/$ARCHIVE_NAME
+
+      - name: Update Lambda to use latest ECR image
         run: |
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --s3-bucket ${{ secrets.S3_BUCKET }} \
-            --s3-key deployments/infoscribe-lambda-${{ github.sha }}.zip
+            --image-uri $IMAGE_URI
