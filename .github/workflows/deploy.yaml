@@ -1,12 +1,3 @@
-name: Deploy Builder App to AWS Lambda
-
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed # Trigger when the PR is closed (merged)
-
 jobs:
   deploy:
     if: github.event.pull_request.merged == true
@@ -16,39 +7,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      
-      - name: Build Docker image
-        run: docker build -t infoscribe-lambda:latest .
-      
-      - name: Create deployment package
+          python-version: "3.11"
+
+      - name: Install dependencies
         run: |
-          docker create --name temp_container infoscribe-lambda:latest
           mkdir -p lambda_package
-          docker cp temp_container:/app/. lambda_package/
-          docker rm temp_container
+          pip install --no-cache-dir -r requirements.txt -t lambda_package/
+          cp -r *.py lambda_package/
+
+      - name: Zip deployment package
+        run: |
           cd lambda_package
           zip -r ../deployment.zip .
-      
+
       - name: Upload to S3
         run: |
           aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/deployments/infoscribe-lambda-${{ github.sha }}.zip
-          
+
       - name: Update Lambda function
         run: |
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
             --s3-bucket ${{ secrets.S3_BUCKET }} \
             --s3-key deployments/infoscribe-lambda-${{ github.sha }}.zip
-            
-      - name: Clean up
-        run: |
-          rm -rf lambda_package deployment.zip
