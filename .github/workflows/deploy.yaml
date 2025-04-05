@@ -5,7 +5,7 @@ on:
     branches:
       - main
     types:
-      - closed 
+      - closed  # PR이 머지되었을 때만 트리거됨
 
 jobs:
   deploy:
@@ -19,9 +19,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install dependencies and prepare deployment package
         run: |
           mkdir -p lambda_package
           pip install --no-cache-dir -r requirements.txt -t lambda_package/
