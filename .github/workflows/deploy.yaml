@@ -1,35 +1,43 @@
-jobs:
-  deploy:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+name: Deploy Builder App to AWS Lambda
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed # Trigger when the PR is closed (merged)
+  jobs:
+    deploy:
+      if: github.event.pull_request.merged == true
+      runs-on: ubuntu-latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: |
-          mkdir -p lambda_package
-          pip install --no-cache-dir -r requirements.txt -t lambda_package/
-          cp -r *.py lambda_package/
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: "3.11"
 
-      - name: Zip deployment package
-        run: |
-          cd lambda_package
-          zip -r ../deployment.zip .
+        - name: Install dependencies
+          run: |
+            mkdir -p lambda_package
+            pip install --no-cache-dir -r requirements.txt -t lambda_package/
+            cp -r *.py lambda_package/
 
-      - name: Upload to S3
-        run: |
-          aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/deployments/infoscribe-lambda-${{ github.sha }}.zip
+        - name: Zip deployment package
+          run: |
+            cd lambda_package
+            zip -r ../deployment.zip .
 
-      - name: Update Lambda function
-        run: |
-          aws lambda update-function-code \
-            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-            --s3-bucket ${{ secrets.S3_BUCKET }} \
-            --s3-key deployments/infoscribe-lambda-${{ github.sha }}.zip
+        - name: Upload to S3
+          run: |
+            aws s3 cp deployment.zip s3://${{ secrets.S3_BUCKET }}/deployments/infoscribe-lambda-${{ github.sha }}.zip
+
+        - name: Update Lambda function
+          run: |
+            aws lambda update-function-code \
+              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --s3-bucket ${{ secrets.S3_BUCKET }} \
+              --s3-key deployments/infoscribe-lambda-${{ github.sha }}.zip
