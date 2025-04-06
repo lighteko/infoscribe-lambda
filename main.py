@@ -1,6 +1,5 @@
 import logging
 from typing import Dict, Any
-from src.app import create_app
 
 # Configure logging
 logging.basicConfig(
@@ -8,9 +7,16 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# Initialize application
-app = create_app()
+# Deferred import to prevent circular references
+def get_app():
+    from src.app import create_app
+    return create_app()
 
+# Initialize application lazily when needed
+app = None
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> None:
+    global app
+    if app is None:
+        app = get_app()
     app.handle(event, context)
