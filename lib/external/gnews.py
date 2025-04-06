@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
-from typing import List, Any, Dict, Optional
-from newsplease import NewsPlease
+from datetime import datetime
+from typing import List, Any, Dict
 import requests
 import logging
+from datetime import timezone
+import os
 
 
 class GNews:
@@ -13,17 +14,35 @@ class GNews:
 
     @classmethod
     def init_app(cls, app: Any):
+        logging.info("LAMBDA DEBUG: Initializing GNews API key")
         cls.API_KEY = app.config.get("GNEWS_API_KEY", "")
+        
+        # Enhanced debugging
         if not cls.API_KEY:
-            logging.warning("GNews API key not configured")
+            env_api_key = os.environ.get("GNEWS_API_KEY", "")
+            if env_api_key:
+                logging.info(f"LAMBDA DEBUG: GNews API key found in environment but not in config")
+                # Use the environment variable directly
+                cls.API_KEY = env_api_key
+                logging.info("LAMBDA DEBUG: Using GNews API key from environment directly")
+            else:
+                logging.warning("GNews API key not configured in config or environment")
+        else:
+            logging.info("LAMBDA DEBUG: GNews API key configured successfully")
 
     def get_news(self, topic: str, from_date: datetime) -> List[Dict[str, Any]]:
+        logging.info(f"LAMBDA DEBUG: Fetching news for topic: {topic}")
         if not GNews.API_KEY:
+            logging.error("LAMBDA DEBUG: GNews API key not initialized")
             raise ValueError("GNews API key not initialized")
         
         try:
+            # Format date for GNews API
+            from_date_str = from_date.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            logging.info(f"LAMBDA DEBUG: Fetching news from date: {from_date_str}")
+            
             response = requests.get(
-                f"https://gnews.io/api/v4/search?q={topic}&from={from_date}&lang=en&country=us&max=10&apikey={GNews.API_KEY}"
+                f"https://gnews.io/api/v4/search?q={topic}&from={from_date_str}&lang=en&country=us&max=10&apikey={GNews.API_KEY}"
             )
             response.raise_for_status()
             
@@ -34,25 +53,31 @@ class GNews:
                 logging.warning(f"No articles found for topic: {topic}")
                 return []
                 
-            news_link_list = [article["url"] for article in res["articles"]]
-            
-            for news_url in news_link_list:
+            logging.info(f"LAMBDA DEBUG: Found {len(res['articles'])} articles for topic: {topic}")
+                
+            # Process articles directly from GNews API response
+            for article in res["articles"]:
                 try:
-                    article = NewsPlease.from_url(news_url)
-                    if article is None:
-                        logging.warning(f"Could not fetch article from {news_url}")
-                        continue
-                        
-                    data = article.get_dict()
-                    if not data:
-                        logging.warning(f"No data extracted from article {news_url}")
-                        continue
-                        
-                    news_list.append(data)
+                    # Create a simplified article structure
+                    processed_article = {
+                        "title": article.get("title", ""),
+                        "description": article.get("description", ""),
+                        "content": article.get("content", ""),
+                        "maintext": article.get("content", ""),  # Use content as maintext
+                        "url": article.get("url", ""),
+                        "source": article.get("source", {}).get("name", ""),
+                        "date_publish": article.get("publishedAt", "")
+                    }
+                    
+                    # Only include articles with content
+                    if processed_article["maintext"]:
+                        news_list.append(processed_article)
+                    
                 except Exception as e:
-                    logging.error(f"Error processing article {news_url}: {e}")
+                    logging.error(f"Error processing article: {e}")
                     continue
 
+            logging.info(f"LAMBDA DEBUG: Successfully processed {len(news_list)} articles")
             return news_list
             
         except requests.RequestException as e:

@@ -1,11 +1,11 @@
 import json
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from langchain.schema import BaseMessage
 
@@ -14,31 +14,48 @@ from io import BytesIO
 
 from pydantic import SecretStr
 
-from src.app import App
-
 
 class OpenAI:
     API_KEY: str = ""
 
     def __init__(self):
+        logging.info("LAMBDA DEBUG: Initializing OpenAI instance")
         if not OpenAI.API_KEY:
+            logging.error("LAMBDA DEBUG: OpenAI API key not initialized")
             raise ValueError("OpenAI API key not initialized")
 
+        logging.info("LAMBDA DEBUG: Creating ChatOpenAI instance")
         self.llm = ChatOpenAI(
             api_key=SecretStr(OpenAI.API_KEY),
             model="gpt-4-turbo-preview",
             temperature=0.7
         )
+        
+        logging.info("LAMBDA DEBUG: Creating OpenAIEmbeddings instance")
         self.embeddings = OpenAIEmbeddings(
             api_key=OpenAI.API_KEY,
             model="text-embedding-3-large"
         )
+        logging.info("LAMBDA DEBUG: OpenAI instance initialized successfully")
 
     @classmethod
-    def init_app(cls, app: App) -> None:
+    def init_app(cls, app: Any) -> None:
+        logging.info("LAMBDA DEBUG: Setting up OpenAI API key from config")
         cls.API_KEY = app.config.get("OPENAI_API_KEY", "")
+        
+        # Enhanced debugging
         if not cls.API_KEY:
-            logging.warning("OpenAI API key not configured")
+            import os
+            env_api_key = os.environ.get("OPENAI_API_KEY", "")
+            if env_api_key:
+                logging.warning(f"LAMBDA DEBUG: OpenAI API key found in environment but not in config")
+                # Use the environment variable directly
+                cls.API_KEY = env_api_key
+                logging.info("LAMBDA DEBUG: Using OpenAI API key from environment directly")
+            else:
+                logging.warning("LAMBDA DEBUG: OpenAI API key not configured in config or environment")
+        else:
+            logging.info("LAMBDA DEBUG: OpenAI API key configured successfully from config")
 
     def send_request(self, messages: List[BaseMessage]) -> str:
         try:
@@ -67,16 +84,36 @@ class OpenAI:
             logging.error(f"Unexpected error parsing JSON: {e}")
             raise
 
-    def generate_prompt(self, preset: str, data: str) -> List[BaseMessage]:
+    def generate_prompt(self, preset: str, data: Any) -> List[BaseMessage]:
         try:
+            logging.info(f"LAMBDA DEBUG: Generating prompt with data type: {type(data)}")
+            
+            # Convert data to a JSON string if it's not already a string
+            if not isinstance(data, str):
+                human_message = json.dumps(data, ensure_ascii=False)
+            else:
+                human_message = data
+                
+            # IMPORTANT: Escape braces to prevent LangChain from treating JSON as template
+            # Double each { and } to escape them in string.format()
+            human_message = human_message.replace("{", "{{").replace("}", "}}")
+            logging.info(f"LAMBDA DEBUG: Escaped JSON braces to prevent template substitution")
+            
+            # Create prompt template
             messages = ChatPromptTemplate.from_messages([
                 ("system", preset),
                 ("ai", "Got it, here we go"),
-                ("human", json.dumps(data, ensure_ascii=False))
+                ("human", human_message)
             ])
-            return messages.format_messages()
+            
+            # For debugging
+            formatted_messages = messages.format_messages()
+            logging.info(f"LAMBDA DEBUG: Formatted {len(formatted_messages)} messages")
+            
+            return formatted_messages
         except Exception as e:
             logging.error(f"Error generating prompt: {e}")
+            logging.error(f"Data causing error: {str(data)[:100]}...")  # Log first 100 chars
             raise
 
     def is_duplicate(self, vector_db: FAISS, content: str, threshold: float = 0.85) -> bool:
@@ -100,14 +137,31 @@ class OpenAI:
 
     def load_vector_db(self, path: str) -> Optional[FAISS]:
         try:
-            return FAISS.load_local(path, self.embeddings)
+            return FAISS.load_local(path, self.embeddings, allow_dangerous_deserialization=True)
         except Exception as e:
             logging.error(f"Error loading vector DB from {path}: {e}")
             raise
 
     def create_vector_db(self) -> FAISS:
         try:
-            return FAISS.from_documents([], self.embeddings)
+            # Get embedding dimension by creating a sample embedding
+            sample_text = "This is a sample text to determine embedding dimension"
+            sample_embedding = self.embeddings.embed_query(sample_text)
+            dimension = len(sample_embedding)
+            
+            # Create an empty FAISS index with the correct dimension
+            import faiss
+            from langchain_community.docstore.in_memory import InMemoryDocstore
+            
+            index = faiss.IndexFlatL2(dimension)
+            
+            # Initialize with empty docstore and index_to_docstore_id
+            return FAISS(
+                embedding_function=self.embeddings,
+                index=index,
+                docstore=InMemoryDocstore({}),
+                index_to_docstore_id={},
+            )
         except Exception as e:
             logging.error(f"Error creating vector DB: {e}")
             raise

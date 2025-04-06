@@ -12,6 +12,7 @@ botocore
 langchain
 langchain-openai
 langchain-core
+langchain-community
 openai
 faiss-cpu
 tiktoken
@@ -28,3 +29,6 @@ jinja2
 # Utility
 python-dateutil
 typing_extensions
+
+# lambda
+awslambdaric

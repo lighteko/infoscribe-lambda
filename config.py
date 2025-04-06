@@ -1,10 +1,6 @@
 import os
-from os.path import join, dirname
-from dotenv import load_dotenv
 from typing import Any
-
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
+import logging
 
 
 class BaseConfig:
@@ -36,3 +32,10 @@ class BaseConfig:
     @classmethod
     def init_app(cls, app: Any):
         app.config.from_object(cls)
+        # Log some key configuration values to verify they're loaded
+        logging.info("===== Environment Variables Loaded =====")
+        logging.info(f"AWS_REGION: {cls.AWS_REGION}")
+        logging.info(f"OPENAI_API_KEY set: {bool(cls.OPENAI_API_KEY)}")
+        logging.info(f"GNEWS_API_KEY set: {bool(cls.GNEWS_API_KEY)}")
+        logging.info(f"EXPRESS_END_POINT: {cls.EXPRESS_END_POINT}")
+        logging.info("=====================================")

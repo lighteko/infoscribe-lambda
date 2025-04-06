@@ -6,8 +6,6 @@ import logging
 from typing import Any, List, Dict, Optional
 from io import BytesIO
 
-from src.app import App
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -28,20 +26,40 @@ class S3:
     def resource(self) -> Any:
         if self._resource is None:
             if not S3.AWS_REGION:
-                raise ValueError("AWS_REGION not configured")
+                # Try to get region from environment
+                region = os.environ.get('AWS_REGION')
+                if not region:
+                    raise ValueError("AWS_REGION not configured")
+                # Update class variable for future use
+                S3.AWS_REGION = region
+                logging.info(f"Using AWS_REGION from environment: {region}")
             self._resource = boto3.resource('s3', region_name=S3.AWS_REGION)
         return self._resource
         
     @property
     def client(self) -> Any:
         if self._client is None:
+            if not S3.AWS_REGION:
+                # Try to get region from environment
+                region = os.environ.get('AWS_REGION')
+                if not region:
+                    raise ValueError("AWS_REGION not configured")
+                # Update class variable for future use
+                S3.AWS_REGION = region
+                logging.info(f"Using AWS_REGION from environment: {region}")
             self._client = boto3.client('s3', region_name=S3.AWS_REGION)
         return self._client
         
     @property
     def bucket(self) -> str:
         if not S3.AWS_BUCKET_NAME:
-            raise ValueError("AWS_BUCKET_NAME not configured")
+            # Try to get it from environment if not in class variable
+            bucket_name = os.environ.get('AWS_BUCKET_NAME')
+            if not bucket_name:
+                raise ValueError("AWS_BUCKET_NAME not configured")
+            # Update the class variable for future use
+            S3.AWS_BUCKET_NAME = bucket_name
+            logging.info(f"Using AWS_BUCKET_NAME from environment: {bucket_name}")
         return S3.AWS_BUCKET_NAME
 
     @classmethod
@@ -49,10 +67,20 @@ class S3:
         cls.AWS_REGION = app.config.get('AWS_REGION', '')
         cls.AWS_BUCKET_NAME = app.config.get('AWS_BUCKET_NAME', '')
         
+        # Try environment variables as backup if config is empty
         if not cls.AWS_REGION:
-            logging.warning("AWS_REGION not configured")
+            cls.AWS_REGION = os.environ.get('AWS_REGION', '')
+            if cls.AWS_REGION:
+                logging.info(f"Using AWS_REGION from environment: {cls.AWS_REGION}")
+            else:
+                logging.warning("AWS_REGION not configured")
+                
         if not cls.AWS_BUCKET_NAME:
-            logging.warning("AWS_BUCKET_NAME not configured")
+            cls.AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', '')
+            if cls.AWS_BUCKET_NAME:
+                logging.info(f"Using AWS_BUCKET_NAME from environment: {cls.AWS_BUCKET_NAME}")
+            else:
+                logging.warning("AWS_BUCKET_NAME not configured")
 
     @staticmethod
     def deserialize_json(json_obj: Dict) -> BytesIO:
@@ -112,7 +140,13 @@ class S3:
         try:
             if file_s3_path is None:
                 file_s3_path = os.path.basename(file_local_path)
+                
+            # Normalize path for S3 (use forward slashes)
+            file_s3_path = file_s3_path.replace('\\', '/')
 
+            # For debugging
+            logging.info(f"Uploading file from {file_local_path} to S3 path: {file_s3_path}")
+            
             self.client.upload_file(file_local_path, bucket, file_s3_path)
 
             object_url = f"https://{bucket}.s3.amazonaws.com/{file_s3_path}"
@@ -128,12 +162,8 @@ class S3:
         if bucket is None:
             bucket = self.bucket
         try:
-            if not hasattr(file_obj, 'filename'):
-                raise ValueError("File object must have a filename attribute")
-
-            if file_s3_path is None:
-                file_s3_path = file_obj.filename
-
+            # Remove check for filename attribute as we always provide file_s3_path explicitly
+            
             file_obj.seek(0)
             self.client.upload_fileobj(file_obj, bucket, file_s3_path)
 
@@ -143,7 +173,7 @@ class S3:
             return object_url
         except Exception as e:
             logging.error(
-                f"Failed uploading file object to S3 ({getattr(file_obj, 'filename', 'unknown')} → {bucket}/{file_s3_path}): {e}")
+                f"Failed uploading file object to S3 (unknown → {bucket}/{file_s3_path}): {e}")
             return None
 
     def delete_file_object(self, file_s3_path: str, bucket: Optional[str] = None) -> None:
