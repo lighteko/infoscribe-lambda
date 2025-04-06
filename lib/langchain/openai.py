@@ -4,8 +4,8 @@ import logging
 from typing import List, Optional, Any
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 from langchain.schema import BaseMessage
 
@@ -19,24 +19,33 @@ class OpenAI:
     API_KEY: str = ""
 
     def __init__(self):
+        logging.info("LAMBDA DEBUG: Initializing OpenAI instance")
         if not OpenAI.API_KEY:
+            logging.error("LAMBDA DEBUG: OpenAI API key not initialized")
             raise ValueError("OpenAI API key not initialized")
 
+        logging.info("LAMBDA DEBUG: Creating ChatOpenAI instance")
         self.llm = ChatOpenAI(
             api_key=SecretStr(OpenAI.API_KEY),
             model="gpt-4-turbo-preview",
             temperature=0.7
         )
+        
+        logging.info("LAMBDA DEBUG: Creating OpenAIEmbeddings instance")
         self.embeddings = OpenAIEmbeddings(
             api_key=OpenAI.API_KEY,
             model="text-embedding-3-large"
         )
+        logging.info("LAMBDA DEBUG: OpenAI instance initialized successfully")
 
     @classmethod
     def init_app(cls, app: Any) -> None:
+        logging.info("LAMBDA DEBUG: Setting up OpenAI API key from config")
         cls.API_KEY = app.config.get("OPENAI_API_KEY", "")
         if not cls.API_KEY:
-            logging.warning("OpenAI API key not configured")
+            logging.warning("LAMBDA DEBUG: OpenAI API key not configured")
+        else:
+            logging.info("LAMBDA DEBUG: OpenAI API key configured successfully")
 
     def send_request(self, messages: List[BaseMessage]) -> str:
         try:

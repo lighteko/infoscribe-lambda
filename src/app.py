@@ -66,11 +66,24 @@ class App:
 
 
 def create_app():
-    app = App()
+    import logging
+    logging.info("LAMBDA DEBUG: Starting create_app function")
+    
+    try:
+        app = App()
+        logging.info("LAMBDA DEBUG: App instance created")
 
-    BaseConfig(app)
-    OpenAI.init_app(app)
-    GNews.init_app(app)
-    Express.init_app(app)
+        logging.info("LAMBDA DEBUG: Initializing BaseConfig")
+        BaseConfig(app)
+        logging.info("LAMBDA DEBUG: Initializing OpenAI")
+        OpenAI.init_app(app)
+        logging.info("LAMBDA DEBUG: Initializing GNews")
+        GNews.init_app(app)
+        logging.info("LAMBDA DEBUG: Initializing Express")
+        Express.init_app(app)
+        logging.info("LAMBDA DEBUG: All services initialized")
 
-    return app
+        return app
+    except Exception as e:
+        logging.error(f"LAMBDA DEBUG: Error in create_app: {str(e)}")
+        raise
