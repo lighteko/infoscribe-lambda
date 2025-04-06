@@ -3,12 +3,8 @@ import tempfile
 import boto3
 import os
 import logging
-from typing import Any, List, Dict, Optional, TYPE_CHECKING
+from typing import Any, List, Dict, Optional
 from io import BytesIO
-
-# Use TYPE_CHECKING for type hints without runtime imports
-if TYPE_CHECKING:
-    from src.app import App
 
 logging.basicConfig(level=logging.INFO)
 

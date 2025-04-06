@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.embeddings import OpenAIEmbeddings
@@ -13,8 +13,6 @@ import numpy as np
 from io import BytesIO
 
 from pydantic import SecretStr
-
-from src.app import App
 
 
 class OpenAI:
@@ -35,7 +33,7 @@ class OpenAI:
         )
 
     @classmethod
-    def init_app(cls, app: App) -> None:
+    def init_app(cls, app: Any) -> None:
         cls.API_KEY = app.config.get("OPENAI_API_KEY", "")
         if not cls.API_KEY:
             logging.warning("OpenAI API key not configured")

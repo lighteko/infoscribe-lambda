@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from typing import List, Any, Dict, Optional
+from datetime import datetime
+from typing import List, Any, Dict
 from newsplease import NewsPlease
 import requests
 import logging
