@@ -52,7 +52,7 @@ jobs:
 
       - name: Update Lambda to use latest ECR image
         run: |
-          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}:latest
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
             --image-uri $IMAGE_URI
