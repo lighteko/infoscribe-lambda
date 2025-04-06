@@ -31,10 +31,11 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          echo "ECR_REGISTRY=$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com" >> $GITHUB_ENV
-          echo "IMAGE_NAME=infoscribe-lambda" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_ENV
           echo "IMAGE_URI=${ECR_REGISTRY}/${IMAGE_NAME}:latest" >> $GITHUB_ENV
-          echo "ARCHIVE_NAME=${IMAGE_NAME}-${{ github.sha }}.tar.gz" >> $GITHUB_ENV
+          echo "TAG_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=${IMAGE_NAME}-${TAG_DATE}-${{ github.sha }}.tar.gz" >> $GITHUB_ENV
 
       - name: Build and push Docker image to ECR (latest only)
         run: |
