@@ -28,30 +28,28 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Set variables
-        id: vars
-        run: |
-          echo "ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_ENV
-          echo "IMAGE_URI=${ECR_REGISTRY}/${IMAGE_NAME}:latest" >> $GITHUB_ENV
-          echo "TAG_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
-          echo "ARCHIVE_NAME=${IMAGE_NAME}-${TAG_DATE}-${{ github.sha }}.tar.gz" >> $GITHUB_ENV
-
       - name: Build and push Docker image to ECR (latest only)
         run: |
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
 
       - name: Save Docker image as tar.gz (with commit hash)
         run: |
+          TAG_DATE=$(date +%Y%m%d)
+          ARCHIVE_NAME=${{ secrets.IMAGE_NAME }}-${TAG_DATE}-${{ github.sha }}.tar.gz
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           docker save $IMAGE_URI | gzip > $ARCHIVE_NAME
 
       - name: Upload Docker image to S3
         run: |
-          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/${TAG_DATE}/$ARCHIVE_NAME
+          TAG_DATE=$(date +%Y%m%d)
+          ARCHIVE_NAME=${{ secrets.IMAGE_NAME }}-${TAG_DATE}-${{ github.sha }}.tar.gz
+          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/$TAG_DATE/$ARCHIVE_NAME
 
       - name: Update Lambda to use latest ECR image
         run: |
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
             --image-uri $IMAGE_URI
