@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload Docker image to S3
         run: |
-          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/$ARCHIVE_NAME
+          aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/${TAG_DATE}/$ARCHIVE_NAME
 
       - name: Update Lambda to use latest ECR image
         run: |
