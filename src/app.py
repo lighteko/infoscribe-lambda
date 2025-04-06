@@ -10,20 +10,29 @@ from src.models.events import LambdaEvent
 
 
 class Config(dict):
-    @classmethod
-    def from_object(cls, obj: Any) -> 'Config':
-        if not hasattr(obj, '__dict__'):
-            raise ValueError("Object must have __dict__ attribute")
-
-        config = cls()
-        for key, value in obj.__dict__.items():
-            config[key] = value
-        return config
+    def __init__(self):
+        self.config = {}
+    
+    def get(self, key, default=None):
+        return self.config.get(key, default)
+    
+    def from_object(self, obj):
+        """Load configuration from an object's class attributes"""
+        for key in dir(obj):
+            if not key.startswith('__') and not callable(getattr(obj, key)):
+                value = getattr(obj, key)
+                self.config[key] = value
+                print(f"Loaded config: {key}={value}")
 
 
 class App:
     def __init__(self):
         self.config = Config()
+        # Don't create service instances here
+
+    def init_app(self):
+        # Don't initialize services again - they're already initialized in create_app
+        # Only create service instances
         self.collector = NewsCollector()
         self.builder = NewsletterBuilder()
 
@@ -67,12 +76,28 @@ class App:
 
 def create_app():
     import logging
-    logging.info("LAMBDA DEBUG: Starting create_app function")
+    import os
+    from dotenv import load_dotenv
+    from pathlib import Path
+
+    # Load environment variables from .env file with explicit path
+    dotenv_path = Path(__file__).parent.parent / '.env'
+    load_dotenv(dotenv_path=dotenv_path)
+    logging.info(f"LAMBDA DEBUG: Loading .env from {dotenv_path}")
     
+    # Debug environment variables
+    logging.info("LAMBDA DEBUG: Environment variables after loading:")
+    logging.info(f"OPENAI_API_KEY set: {bool(os.environ.get('OPENAI_API_KEY'))}")
+    logging.info(f"GNEWS_API_KEY set: {bool(os.environ.get('GNEWS_API_KEY'))}")
+    logging.info(f"AWS_REGION set: {bool(os.environ.get('AWS_REGION'))}")
+    
+    logging.info("LAMBDA DEBUG: Starting create_app function")
+
     try:
         app = App()
         logging.info("LAMBDA DEBUG: App instance created")
 
+        # Initialize all service classes first
         logging.info("LAMBDA DEBUG: Initializing BaseConfig")
         BaseConfig(app)
         logging.info("LAMBDA DEBUG: Initializing OpenAI")
@@ -81,6 +106,11 @@ def create_app():
         GNews.init_app(app)
         logging.info("LAMBDA DEBUG: Initializing Express")
         Express.init_app(app)
+        logging.info("LAMBDA DEBUG: Service classes initialized")
+
+        # Only create service instances after initializing all services
+        logging.info("LAMBDA DEBUG: Initializing service instances")
+        app.init_app()
         logging.info("LAMBDA DEBUG: All services initialized")
 
         return app
