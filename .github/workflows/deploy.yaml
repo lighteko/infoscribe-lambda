@@ -28,15 +28,14 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Debug - Print image URI
-        run: |
-          echo "🔍 IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest"
-
       - name: Build and push Docker image to ECR (latest only)
         run: |
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
+          # docker push $IMAGE_URI
+
+      - name: Debug image list
+        run: docker images
 
       - name: Save Docker image as tar.gz (with commit hash)
         run: |
