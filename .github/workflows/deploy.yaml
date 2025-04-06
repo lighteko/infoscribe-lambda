@@ -50,6 +50,12 @@ jobs:
           ARCHIVE_NAME=${SAFE_NAME}-${TAG_DATE}-${{ github.sha }}.tar.gz
           aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/$TAG_DATE/$ARCHIVE_NAME
 
+      - name: Update Lambda function configuration to use container images
+        run: |
+          aws lambda update-function-configuration \
+            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+            --package-type Image
+
       - name: Update Lambda to use latest ECR image
         run: |
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
