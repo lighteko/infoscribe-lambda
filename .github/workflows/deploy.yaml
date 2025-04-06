@@ -30,8 +30,9 @@ jobs:
 
       - name: Build and push Docker image to ECR (latest only)
         run: |
-          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
-          docker build -t $IMAGE_URI .
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}
+          docker build -t ${{ secrets.IMAGE_NAME }} .
+          docker tag ${{ secrets.IMAGE_NAME }}:latest $IMAGE_URI
           docker push $IMAGE_URI
 
       - name: Save Docker image as tar.gz (with commit hash)
@@ -51,7 +52,7 @@ jobs:
 
       - name: Update Lambda to use latest ECR image
         run: |
-          IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
+          IMAGE_URI=${{ secrets.ECR_REGISTRY }}:latest
           aws lambda update-function-code \
             --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
             --image-uri $IMAGE_URI
