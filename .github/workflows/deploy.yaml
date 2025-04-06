@@ -28,6 +28,10 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Debug - Print image URI
+        run: |
+          echo "🔍 IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest"
+
       - name: Build and push Docker image to ECR (latest only)
         run: |
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
@@ -37,14 +41,16 @@ jobs:
       - name: Save Docker image as tar.gz (with commit hash)
         run: |
           TAG_DATE=$(date +%Y%m%d)
-          ARCHIVE_NAME=${{ secrets.IMAGE_NAME }}-${TAG_DATE}-${{ github.sha }}.tar.gz
+          SAFE_NAME=$(echo "${{ secrets.IMAGE_NAME }}" | tr '/' '-')
+          ARCHIVE_NAME=${SAFE_NAME}-${TAG_DATE}-${{ github.sha }}.tar.gz
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.IMAGE_NAME }}:latest
           docker save $IMAGE_URI | gzip > $ARCHIVE_NAME
 
       - name: Upload Docker image to S3
         run: |
           TAG_DATE=$(date +%Y%m%d)
-          ARCHIVE_NAME=${{ secrets.IMAGE_NAME }}-${TAG_DATE}-${{ github.sha }}.tar.gz
+          SAFE_NAME=$(echo "${{ secrets.IMAGE_NAME }}" | tr '/' '-')
+          ARCHIVE_NAME=${SAFE_NAME}-${TAG_DATE}-${{ github.sha }}.tar.gz
           aws s3 cp $ARCHIVE_NAME s3://${{ secrets.S3_BUCKET }}/images/$TAG_DATE/$ARCHIVE_NAME
 
       - name: Update Lambda to use latest ECR image
