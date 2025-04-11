@@ -14,32 +14,32 @@ class GNews:
 
     @classmethod
     def init_app(cls, app: Any):
-        logging.info("LAMBDA DEBUG: Initializing GNews API key")
+        print("LAMBDA DEBUG: Initializing GNews API key")
         cls.API_KEY = app.config.get("GNEWS_API_KEY", "")
         
         # Enhanced debugging
         if not cls.API_KEY:
             env_api_key = os.environ.get("GNEWS_API_KEY", "")
             if env_api_key:
-                logging.info(f"LAMBDA DEBUG: GNews API key found in environment but not in config")
+                print(f"LAMBDA DEBUG: GNews API key found in environment but not in config")
                 # Use the environment variable directly
                 cls.API_KEY = env_api_key
-                logging.info("LAMBDA DEBUG: Using GNews API key from environment directly")
+                print("LAMBDA DEBUG: Using GNews API key from environment directly")
             else:
-                logging.warning("GNews API key not configured in config or environment")
+                print("GNews API key not configured in config or environment")
         else:
-            logging.info("LAMBDA DEBUG: GNews API key configured successfully")
+            print("LAMBDA DEBUG: GNews API key configured successfully")
 
     def get_news(self, topic: str, from_date: datetime) -> List[Dict[str, Any]]:
-        logging.info(f"LAMBDA DEBUG: Fetching news for topic: {topic}")
+        print(f"LAMBDA DEBUG: Fetching news for topic: {topic}")
         if not GNews.API_KEY:
-            logging.error("LAMBDA DEBUG: GNews API key not initialized")
+            print("LAMBDA DEBUG: GNews API key not initialized")
             raise ValueError("GNews API key not initialized")
         
         try:
             # Format date for GNews API
             from_date_str = from_date.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            logging.info(f"LAMBDA DEBUG: Fetching news from date: {from_date_str}")
+            print(f"LAMBDA DEBUG: Fetching news from date: {from_date_str}")
             
             response = requests.get(
                 f"https://gnews.io/api/v4/search?q={topic}&from={from_date_str}&lang=en&country=us&max=10&apikey={GNews.API_KEY}"
@@ -50,10 +50,10 @@ class GNews:
             res = response.json()
             
             if "articles" not in res:
-                logging.warning(f"No articles found for topic: {topic}")
+                print(f"No articles found for topic: {topic}")
                 return []
                 
-            logging.info(f"LAMBDA DEBUG: Found {len(res['articles'])} articles for topic: {topic}")
+            print(f"LAMBDA DEBUG: Found {len(res['articles'])} articles for topic: {topic}")
                 
             # Process articles directly from GNews API response
             for article in res["articles"]:
@@ -74,15 +74,15 @@ class GNews:
                         news_list.append(processed_article)
                     
                 except Exception as e:
-                    logging.error(f"Error processing article: {e}")
+                    print(f"Error processing article: {e}")
                     continue
 
-            logging.info(f"LAMBDA DEBUG: Successfully processed {len(news_list)} articles")
+            print(f"LAMBDA DEBUG: Successfully processed {len(news_list)} articles")
             return news_list
             
         except requests.RequestException as e:
-            logging.error(f"Error fetching news from GNews API: {e}")
+            print(f"Error fetching news from GNews API: {e}")
             raise ValueError(f"Failed to fetch news: {str(e)}")
         except Exception as e:
-            logging.error(f"Unexpected error in get_news: {e}")
+            print(f"Unexpected error in get_news: {e}")
             raise

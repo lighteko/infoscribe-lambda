@@ -8,13 +8,13 @@ class Express:
 
     def __init__(self):
         if not Express.API_END_POINT:
-            logging.warning("Express API endpoint not initialized")
+            print("Express API endpoint not initialized")
 
     @classmethod
     def init_app(cls, app: Any) -> None:
         cls.API_END_POINT = app.config.get("EXPRESS_END_POINT", "")
         if not cls.API_END_POINT:
-            logging.warning("Express API endpoint not configured")
+            print("Express API endpoint not configured")
 
     def dispatch_newsletter(self, provider_id: str, dispatch_date: str) -> bool:
         if not Express.API_END_POINT:
@@ -32,8 +32,8 @@ class Express:
             return True
             
         except requests.RequestException as e:
-            logging.error(f"Error dispatching newsletter: {e}")
+            print(f"Error dispatching newsletter: {e}")
             return False
         except Exception as e:
-            logging.error(f"Unexpected error in dispatch_newsletter: {e}")
+            print(f"Unexpected error in dispatch_newsletter: {e}")
             return False

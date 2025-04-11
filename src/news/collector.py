@@ -19,13 +19,13 @@ class NewsCollector:
             tags: List of news keywords to collect
             dispatch_day: Day offset for dispatch
         """
-        logging.info(
+        print(
             f"Collecting news for provider: {provider_id}, tags: {tags}")
 
         try:
             self.service.daily_summarize(
                 provider_id, locale, tags, dispatch_day)
-            logging.info(
+            print(
                 f"Successfully collected news for provider {provider_id}")
         except Exception as e:
             logging.exception(f"Failed to collect news: {str(e)}")

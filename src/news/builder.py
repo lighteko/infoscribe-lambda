@@ -18,12 +18,12 @@ class NewsletterBuilder:
             locale: The locale for the newsletter
             tags: List of news keywords to include
         """
-        logging.info(
+        print(
             f"Building newsletter for provider: {provider_id}, tags: {tags}")
 
         try:
             self.service.make_newsletter(provider_id, locale, tags)
-            logging.info(
+            print(
                 f"Successfully built newsletter for provider {provider_id}")
         except Exception as e:
             logging.exception(f"Failed to build newsletter: {str(e)}")
