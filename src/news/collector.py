@@ -28,5 +28,5 @@ class NewsCollector:
             print(
                 f"Successfully collected news for provider {provider_id}")
         except Exception as e:
-            logging.exception(f"Failed to collect news: {str(e)}")
+            print(f"Failed to collect news: {str(e)}")
             raise

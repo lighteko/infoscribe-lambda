@@ -6,7 +6,7 @@ import logging
 from typing import Any, List, Dict, Optional
 from io import BytesIO
 
-logging.basicConfig(level=print)
+# logging.basicConfig(level=print)
 
 
 class File:

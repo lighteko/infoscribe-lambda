@@ -69,7 +69,7 @@ class App:
                 print(f"Unsupported event type: {detail.eventType}")
 
         except Exception as e:
-            logging.exception(f"Error processing event: {str(e)}")
+            print(f"Error processing event: {str(e)}")
             # Reraise to mark Lambda execution as failed
             raise
 

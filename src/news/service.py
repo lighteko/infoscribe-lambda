@@ -9,7 +9,6 @@ import json
 from collections import defaultdict
 from functools import lru_cache
 from io import BytesIO
-import logging
 import os
 import shutil
 import tempfile

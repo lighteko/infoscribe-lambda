@@ -26,5 +26,5 @@ class NewsletterBuilder:
             print(
                 f"Successfully built newsletter for provider {provider_id}")
         except Exception as e:
-            logging.exception(f"Failed to build newsletter: {str(e)}")
+            print(f"Failed to build newsletter: {str(e)}")
             raise
