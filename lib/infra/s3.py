@@ -6,7 +6,7 @@ import logging
 from typing import Any, List, Dict, Optional
 from io import BytesIO
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=print)
 
 
 class File:
@@ -32,7 +32,7 @@ class S3:
                     raise ValueError("AWS_REGION not configured")
                 # Update class variable for future use
                 S3.AWS_REGION = region
-                logging.info(f"Using AWS_REGION from environment: {region}")
+                print(f"Using AWS_REGION from environment: {region}")
             self._resource = boto3.resource('s3', region_name=S3.AWS_REGION)
         return self._resource
         
@@ -46,7 +46,7 @@ class S3:
                     raise ValueError("AWS_REGION not configured")
                 # Update class variable for future use
                 S3.AWS_REGION = region
-                logging.info(f"Using AWS_REGION from environment: {region}")
+                print(f"Using AWS_REGION from environment: {region}")
             self._client = boto3.client('s3', region_name=S3.AWS_REGION)
         return self._client
         
@@ -59,7 +59,7 @@ class S3:
                 raise ValueError("AWS_BUCKET_NAME not configured")
             # Update the class variable for future use
             S3.AWS_BUCKET_NAME = bucket_name
-            logging.info(f"Using AWS_BUCKET_NAME from environment: {bucket_name}")
+            print(f"Using AWS_BUCKET_NAME from environment: {bucket_name}")
         return S3.AWS_BUCKET_NAME
 
     @classmethod
@@ -71,16 +71,16 @@ class S3:
         if not cls.AWS_REGION:
             cls.AWS_REGION = os.environ.get('AWS_REGION', '')
             if cls.AWS_REGION:
-                logging.info(f"Using AWS_REGION from environment: {cls.AWS_REGION}")
+                print(f"Using AWS_REGION from environment: {cls.AWS_REGION}")
             else:
-                logging.warning("AWS_REGION not configured")
+                print("AWS_REGION not configured")
                 
         if not cls.AWS_BUCKET_NAME:
             cls.AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', '')
             if cls.AWS_BUCKET_NAME:
-                logging.info(f"Using AWS_BUCKET_NAME from environment: {cls.AWS_BUCKET_NAME}")
+                print(f"Using AWS_BUCKET_NAME from environment: {cls.AWS_BUCKET_NAME}")
             else:
-                logging.warning("AWS_BUCKET_NAME not configured")
+                print("AWS_BUCKET_NAME not configured")
 
     @staticmethod
     def deserialize_json(json_obj: Dict) -> BytesIO:
@@ -101,7 +101,7 @@ class S3:
                 res.append(json_data)
             return res
         except Exception as e:
-            logging.error(f"Error serializing JSON files: {e}")
+            print(f"Error serializing JSON files: {e}")
             return None
 
     def get_files_from_dir(self, dir_name: str, bucket: Optional[str] = None) -> List[str]:
@@ -114,7 +114,7 @@ class S3:
                 return [obj['Key'] for obj in response['Contents']]
             return []
         except Exception as e:
-            logging.error(
+            print(
                 f"Error listing files in {bucket}/{dir_name}: {e}")
             return []
 
@@ -126,11 +126,11 @@ class S3:
             tempfile.gettempdir(), os.path.basename(path))
         try:
             self.client.download_file(bucket, path, local_path)
-            logging.info(
+            print(
                 f"Successfully downloaded file from S3: {path} → {local_path}")
             return local_path
         except Exception as e:
-            logging.error(
+            print(
                 f"Failed downloading file from S3 ({bucket}/{path}): {e}")
             return None
 
@@ -145,16 +145,16 @@ class S3:
             file_s3_path = file_s3_path.replace('\\', '/')
 
             # For debugging
-            logging.info(f"Uploading file from {file_local_path} to S3 path: {file_s3_path}")
+            print(f"Uploading file from {file_local_path} to S3 path: {file_s3_path}")
             
             self.client.upload_file(file_local_path, bucket, file_s3_path)
 
             object_url = f"https://{bucket}.s3.amazonaws.com/{file_s3_path}"
-            logging.info(
+            print(
                 f"Successfully uploaded file to S3: {object_url}")
             return object_url
         except Exception as e:
-            logging.error(
+            print(
                 f"Failed uploading file to S3 ({file_local_path} → {bucket}/{file_s3_path}): {e}")
             return None
 
@@ -168,11 +168,11 @@ class S3:
             self.client.upload_fileobj(file_obj, bucket, file_s3_path)
 
             object_url = f"https://{bucket}.s3.amazonaws.com/{file_s3_path}"
-            logging.info(
+            print(
                 f"Successfully uploaded file object to S3: {object_url}")
             return object_url
         except Exception as e:
-            logging.error(
+            print(
                 f"Failed uploading file object to S3 (unknown → {bucket}/{file_s3_path}): {e}")
             return None
 
@@ -181,9 +181,9 @@ class S3:
             bucket = self.bucket
         try:
             self.client.delete_object(Bucket=bucket, Key=file_s3_path)
-            logging.info(f"Removed file from S3: {file_s3_path}")
+            print(f"Removed file from S3: {file_s3_path}")
         except Exception as e:
-            logging.error(
+            print(
                 f"Failed removing file from S3 ({file_s3_path}): {e}")
 
     def copy_s3_file(self, source_bucket: str, source_key: str, destination_bucket: str, destination_key: str) -> Optional[str]:
@@ -192,10 +192,10 @@ class S3:
             self.client.copy(copy_source, destination_bucket, destination_key)
 
             s3_url = f"https://{destination_bucket}.s3.amazonaws.com/{destination_key}"
-            logging.info(
+            print(
                 f"File copied successfully: {source_bucket}/{source_key} → {destination_bucket}/{destination_key}")
             return s3_url
         except Exception as e:
-            logging.error(
+            print(
                 f"Failed copying file ({source_bucket}/{source_key} → {destination_bucket}/{destination_key}): {e}")
             return None

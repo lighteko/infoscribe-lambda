@@ -19,28 +19,28 @@ class OpenAI:
     API_KEY: str = ""
 
     def __init__(self):
-        logging.info("LAMBDA DEBUG: Initializing OpenAI instance")
+        print("LAMBDA DEBUG: Initializing OpenAI instance")
         if not OpenAI.API_KEY:
-            logging.error("LAMBDA DEBUG: OpenAI API key not initialized")
+            print("LAMBDA DEBUG: OpenAI API key not initialized")
             raise ValueError("OpenAI API key not initialized")
 
-        logging.info("LAMBDA DEBUG: Creating ChatOpenAI instance")
+        print("LAMBDA DEBUG: Creating ChatOpenAI instance")
         self.llm = ChatOpenAI(
             api_key=SecretStr(OpenAI.API_KEY),
             model="gpt-4-turbo-preview",
             temperature=0.7
         )
         
-        logging.info("LAMBDA DEBUG: Creating OpenAIEmbeddings instance")
+        print("LAMBDA DEBUG: Creating OpenAIEmbeddings instance")
         self.embeddings = OpenAIEmbeddings(
             api_key=OpenAI.API_KEY,
             model="text-embedding-3-large"
         )
-        logging.info("LAMBDA DEBUG: OpenAI instance initialized successfully")
+        print("LAMBDA DEBUG: OpenAI instance initialized successfully")
 
     @classmethod
     def init_app(cls, app: Any) -> None:
-        logging.info("LAMBDA DEBUG: Setting up OpenAI API key from config")
+        print("LAMBDA DEBUG: Setting up OpenAI API key from config")
         cls.API_KEY = app.config.get("OPENAI_API_KEY", "")
         
         # Enhanced debugging
@@ -48,14 +48,14 @@ class OpenAI:
             import os
             env_api_key = os.environ.get("OPENAI_API_KEY", "")
             if env_api_key:
-                logging.warning(f"LAMBDA DEBUG: OpenAI API key found in environment but not in config")
+                print(f"LAMBDA DEBUG: OpenAI API key found in environment but not in config")
                 # Use the environment variable directly
                 cls.API_KEY = env_api_key
-                logging.info("LAMBDA DEBUG: Using OpenAI API key from environment directly")
+                print("LAMBDA DEBUG: Using OpenAI API key from environment directly")
             else:
-                logging.warning("LAMBDA DEBUG: OpenAI API key not configured in config or environment")
+                print("LAMBDA DEBUG: OpenAI API key not configured in config or environment")
         else:
-            logging.info("LAMBDA DEBUG: OpenAI API key configured successfully from config")
+            print("LAMBDA DEBUG: OpenAI API key configured successfully from config")
 
     def send_request(self, messages: List[BaseMessage]) -> str:
         try:
@@ -64,7 +64,7 @@ class OpenAI:
                 return res.content
             raise ValueError("Unexpected response format from OpenAI")
         except Exception as e:
-            logging.error(f"Error in OpenAI request: {e}")
+            print(f"Error in OpenAI request: {e}")
             raise
 
     def parse_json_result(self, response: str) -> dict:
@@ -77,16 +77,16 @@ class OpenAI:
             result = json.loads(clean_response)
             return result
         except json.JSONDecodeError as e:
-            logging.error(f"JSON parsing error: {e}")
+            print(f"JSON parsing error: {e}")
             raise ValueError(
                 "The response was not properly formatted in JSON.")
         except Exception as e:
-            logging.error(f"Unexpected error parsing JSON: {e}")
+            print(f"Unexpected error parsing JSON: {e}")
             raise
 
     def generate_prompt(self, preset: str, data: Any) -> List[BaseMessage]:
         try:
-            logging.info(f"LAMBDA DEBUG: Generating prompt with data type: {type(data)}")
+            print(f"LAMBDA DEBUG: Generating prompt with data type: {type(data)}")
             
             # Convert data to a JSON string if it's not already a string
             if not isinstance(data, str):
@@ -97,7 +97,7 @@ class OpenAI:
             # IMPORTANT: Escape braces to prevent LangChain from treating JSON as template
             # Double each { and } to escape them in string.format()
             human_message = human_message.replace("{", "{{").replace("}", "}}")
-            logging.info(f"LAMBDA DEBUG: Escaped JSON braces to prevent template substitution")
+            print(f"LAMBDA DEBUG: Escaped JSON braces to prevent template substitution")
             
             # Create prompt template
             messages = ChatPromptTemplate.from_messages([
@@ -108,12 +108,12 @@ class OpenAI:
             
             # For debugging
             formatted_messages = messages.format_messages()
-            logging.info(f"LAMBDA DEBUG: Formatted {len(formatted_messages)} messages")
+            print(f"LAMBDA DEBUG: Formatted {len(formatted_messages)} messages")
             
             return formatted_messages
         except Exception as e:
-            logging.error(f"Error generating prompt: {e}")
-            logging.error(f"Data causing error: {str(data)[:100]}...")  # Log first 100 chars
+            print(f"Error generating prompt: {e}")
+            print(f"Data causing error: {str(data)[:100]}...")  # Log first 100 chars
             raise
 
     def is_duplicate(self, vector_db: FAISS, content: str, threshold: float = 0.85) -> bool:
@@ -132,14 +132,14 @@ class OpenAI:
                     return True
             return False
         except Exception as e:
-            logging.error(f"Error checking for duplicates: {e}")
+            print(f"Error checking for duplicates: {e}")
             raise
 
     def load_vector_db(self, path: str) -> Optional[FAISS]:
         try:
             return FAISS.load_local(path, self.embeddings, allow_dangerous_deserialization=True)
         except Exception as e:
-            logging.error(f"Error loading vector DB from {path}: {e}")
+            print(f"Error loading vector DB from {path}: {e}")
             raise
 
     def create_vector_db(self) -> FAISS:
@@ -163,7 +163,7 @@ class OpenAI:
                 index_to_docstore_id={},
             )
         except Exception as e:
-            logging.error(f"Error creating vector DB: {e}")
+            print(f"Error creating vector DB: {e}")
             raise
 
     def update_vector_db(self, vector_db: FAISS, content: str) -> None:
@@ -171,7 +171,7 @@ class OpenAI:
             document = Document(page_content=content)
             vector_db.add_documents([document])
         except Exception as e:
-            logging.error(f"Error updating vector DB: {e}")
+            print(f"Error updating vector DB: {e}")
             raise
 
     def save_vector_db_local(self, vector_db: FAISS, name: str) -> str:
@@ -180,7 +180,7 @@ class OpenAI:
             vector_db.save_local(path)
             return path
         except Exception as e:
-            logging.error(f"Error saving vector DB to {name}: {e}")
+            print(f"Error saving vector DB to {name}: {e}")
             raise
 
     @staticmethod
@@ -188,5 +188,5 @@ class OpenAI:
         try:
             return float(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
         except Exception as e:
-            logging.error(f"Error calculating cosine similarity: {e}")
+            print(f"Error calculating cosine similarity: {e}")
             raise

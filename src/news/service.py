@@ -9,7 +9,6 @@ import json
 from collections import defaultdict
 from functools import lru_cache
 from io import BytesIO
-import logging
 import os
 import shutil
 import tempfile
@@ -22,7 +21,7 @@ class NewsService:
         self.s3 = S3()
         # Use absolute path for templates
         template_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "template")
-        logging.info(f"Loading templates from: {template_dir}")
+        print(f"Loading templates from: {template_dir}")
         self.env = Environment(loader=FileSystemLoader(template_dir))
         self.express = Express()
 
@@ -61,7 +60,7 @@ class NewsService:
             vector_db_files = self.s3.get_files_from_dir(f"{provider_id}/collection/vectordb/")
             
             if not vector_db_files:
-                logging.info(f"No vector database files found for provider {provider_id}")
+                print(f"No vector database files found for provider {provider_id}")
                 return None
                 
             # Create a temporary directory to download the vector DB files
@@ -86,10 +85,10 @@ class NewsService:
                     # Copy to the structured directory
                     shutil.copy2(downloaded_path, target_path)
             
-            logging.info(f"Downloaded vector database for provider {provider_id} to {temp_dir}")
+            print(f"Downloaded vector database for provider {provider_id} to {temp_dir}")
             return temp_dir
         except Exception as e:
-            logging.info(f"Vector database not found for provider {provider_id}, will create a new one: {str(e)}")
+            print(f"Vector database not found for provider {provider_id}, will create a new one: {str(e)}")
             return None
 
     def _save_vector_db(self, provider_id: str, db):
@@ -97,7 +96,7 @@ class NewsService:
         try:
             # Save the vector DB locally
             local_dir = self.openAI.save_vector_db_local(db, "temp_vectordb")
-            logging.info(f"Vector DB saved locally to {local_dir}")
+            print(f"Vector DB saved locally to {local_dir}")
             
             # Upload each file in the directory
             for root, _, files in os.walk(local_dir):
@@ -108,11 +107,11 @@ class NewsService:
                     
                     # Upload individual file
                     self.s3.upload_file(local_file_path, s3_key)
-                    logging.info(f"Uploaded {local_file_path} to {s3_key}")
+                    print(f"Uploaded {local_file_path} to {s3_key}")
             
-            logging.info(f"Successfully saved vector DB for provider {provider_id}")
+            print(f"Successfully saved vector DB for provider {provider_id}")
         except Exception as e:
-            logging.warning(f"Failed to save vector DB for provider {provider_id}: {e}")
+            print(f"Failed to save vector DB for provider {provider_id}: {e}")
 
     def daily_summarize(self, provider_id: str, locale: str, tags: List[str], dispatch_day: int):
         today = datetime.now()
@@ -157,7 +156,7 @@ class NewsService:
             """
 
             # Log the contents for debugging
-            logging.info(f"Generating summary for {len(contents)} articles")
+            print(f"Generating summary for {len(contents)} articles")
             
             # Pass contents directly instead of json-encoded string
             prompt = self.openAI.generate_prompt(news_summarizer, contents)

@@ -66,10 +66,10 @@ class App:
                 )
 
             else:
-                logging.warning(f"Unsupported event type: {detail.eventType}")
+                print(f"Unsupported event type: {detail.eventType}")
 
         except Exception as e:
-            logging.exception(f"Error processing event: {str(e)}")
+            print(f"Error processing event: {str(e)}")
             # Reraise to mark Lambda execution as failed
             raise
 
@@ -83,37 +83,37 @@ def create_app():
     # Load environment variables from .env file with explicit path
     dotenv_path = Path(__file__).parent.parent / '.env'
     load_dotenv(dotenv_path=dotenv_path)
-    logging.info(f"LAMBDA DEBUG: Loading .env from {dotenv_path}")
+    print(f"LAMBDA DEBUG: Loading .env from {dotenv_path}")
     
     # Debug environment variables
-    logging.info("LAMBDA DEBUG: Environment variables after loading:")
-    logging.info(f"OPENAI_API_KEY set: {bool(os.environ.get('OPENAI_API_KEY'))}")
-    logging.info(f"GNEWS_API_KEY set: {bool(os.environ.get('GNEWS_API_KEY'))}")
-    logging.info(f"AWS_REGION set: {bool(os.environ.get('AWS_REGION'))}")
+    print("LAMBDA DEBUG: Environment variables after loading:")
+    print(f"OPENAI_API_KEY set: {bool(os.environ.get('OPENAI_API_KEY'))}")
+    print(f"GNEWS_API_KEY set: {bool(os.environ.get('GNEWS_API_KEY'))}")
+    print(f"AWS_REGION set: {bool(os.environ.get('AWS_REGION'))}")
     
-    logging.info("LAMBDA DEBUG: Starting create_app function")
+    print("LAMBDA DEBUG: Starting create_app function")
 
     try:
         app = App()
-        logging.info("LAMBDA DEBUG: App instance created")
+        print("LAMBDA DEBUG: App instance created")
 
         # Initialize all service classes first
-        logging.info("LAMBDA DEBUG: Initializing BaseConfig")
+        print("LAMBDA DEBUG: Initializing BaseConfig")
         BaseConfig(app)
-        logging.info("LAMBDA DEBUG: Initializing OpenAI")
+        print("LAMBDA DEBUG: Initializing OpenAI")
         OpenAI.init_app(app)
-        logging.info("LAMBDA DEBUG: Initializing GNews")
+        print("LAMBDA DEBUG: Initializing GNews")
         GNews.init_app(app)
-        logging.info("LAMBDA DEBUG: Initializing Express")
+        print("LAMBDA DEBUG: Initializing Express")
         Express.init_app(app)
-        logging.info("LAMBDA DEBUG: Service classes initialized")
+        print("LAMBDA DEBUG: Service classes initialized")
 
         # Only create service instances after initializing all services
-        logging.info("LAMBDA DEBUG: Initializing service instances")
+        print("LAMBDA DEBUG: Initializing service instances")
         app.init_app()
-        logging.info("LAMBDA DEBUG: All services initialized")
+        print("LAMBDA DEBUG: All services initialized")
 
         return app
     except Exception as e:
-        logging.error(f"LAMBDA DEBUG: Error in create_app: {str(e)}")
+        print(f"LAMBDA DEBUG: Error in create_app: {str(e)}")
         raise

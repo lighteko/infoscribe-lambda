@@ -33,9 +33,9 @@ class BaseConfig:
     def init_app(cls, app: Any):
         app.config.from_object(cls)
         # Log some key configuration values to verify they're loaded
-        logging.info("===== Environment Variables Loaded =====")
-        logging.info(f"AWS_REGION: {cls.AWS_REGION}")
-        logging.info(f"OPENAI_API_KEY set: {bool(cls.OPENAI_API_KEY)}")
-        logging.info(f"GNEWS_API_KEY set: {bool(cls.GNEWS_API_KEY)}")
-        logging.info(f"EXPRESS_END_POINT: {cls.EXPRESS_END_POINT}")
-        logging.info("=====================================")
+        print("===== Environment Variables Loaded =====")
+        print(f"AWS_REGION: {cls.AWS_REGION}")
+        print(f"OPENAI_API_KEY set: {bool(cls.OPENAI_API_KEY)}")
+        print(f"GNEWS_API_KEY set: {bool(cls.GNEWS_API_KEY)}")
+        print(f"EXPRESS_END_POINT: {cls.EXPRESS_END_POINT}")
+        print("=====================================")
