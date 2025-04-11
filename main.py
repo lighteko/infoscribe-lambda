@@ -48,7 +48,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> None:
 
     print(f"LAMBDA DEBUG: Processing event: {event}")
     try:
-        app.handle(event, context)
+        for record in event['Records']:
+            app.handle(record, context)
         print("LAMBDA DEBUG: Event handling completed successfully")
     except Exception as e:
         print(f"LAMBDA DEBUG: Error handling event: {str(e)}")
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     lambda_handler({
         "source": "aws.events",
         "detail": {
-            "eventType": "build",
+            "eventType": "collect",
             "providerId": "630b991e-9ebb-4536-93b2-8f4573d618ff",
             "locale": "en-US",
             "tags": [
