@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Dict, Any
 import os
@@ -49,7 +50,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> None:
     print(f"LAMBDA DEBUG: Processing event: {event}")
     try:
         for record in event['Records']:
-            app.handle(record["body"], context)
+            app.handle(json.loads(record["body"]), context)
         print("LAMBDA DEBUG: Event handling completed successfully")
     except Exception as e:
         print(f"LAMBDA DEBUG: Error handling event: {str(e)}")
