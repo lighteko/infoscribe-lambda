@@ -27,7 +27,7 @@ class OpenAI:
         print("LAMBDA DEBUG: Creating ChatOpenAI instance")
         self.llm = ChatOpenAI(
             api_key=SecretStr(OpenAI.API_KEY),
-            model="gpt-4-turbo-preview",
+            model="gpt-4o-mini",
             temperature=0.7
         )
         
